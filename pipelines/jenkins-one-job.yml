@@ -1,0 +1,88 @@
+resources:
+  - name: git-repo
+    source:
+      branch: master
+      private_key: {{github-private-key}}
+      uri: git@github.com:trussworks/brainsik-concourse.git
+    type: git
+
+  - name: debian-package
+    type: semver
+    source:
+      driver: s3
+      bucket: truss-github-brainsik-concourse
+      key: debian-package
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+      region_name: us-west-2
+
+  - name: packed-ami
+    type: semver
+    source:
+      driver: s3
+      bucket: truss-github-brainsik-concourse
+      key: packed-ami
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+      region_name: us-west-2
+
+jobs:
+  - name: all-the-things
+    plan:
+      - get: git-repo
+        trigger: true
+
+      - task: unit-tests
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: "2"
+          run:
+            path: sh
+            args:
+              - -ec
+              - |
+                echo pytest
+                echo ..........
+                echo SUCCESS!
+
+      - task: package-deb
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: "2"
+          run:
+            path: sh
+            args:
+              - -ec
+              - |
+                echo dpkg-buildpackage -xyz
+                echo … blah blah blah …
+                echo done!
+      - put: debian-package
+        params: {bump: minor}
+
+      - task: pack-ami
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: "2"
+          run:
+            path: sh
+            args:
+              - -ec
+              - |
+                echo package build some.json
+                echo … blah blah blah …
+                echo done!
+      - put: packed-ami
+        params: {bump: minor}

@@ -1,0 +1,96 @@
+resources:
+  - name: git-repo
+    source:
+      branch: master
+      private_key: {{github-private-key}}
+      uri: git@github.com:trussworks/brainsik-concourse.git
+    type: git
+
+  - name: packed-ami
+    type: semver
+    source:
+      driver: s3
+      bucket: truss-github-brainsik-concourse
+      key: packed-ami
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+      region_name: us-west-2
+
+jobs:
+  - name: deploy-staging
+    plan:
+      - get: git-repo
+        trigger: true
+      - get: packed-ami
+        trigger: true
+      - task: task
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: "2"
+          run:
+            path: /bin/true
+
+  - name: test-staging
+    plan:
+      - get: git-repo
+        passed:
+          - deploy-staging
+        trigger: true
+      - get: packed-ami
+        passed:
+          - deploy-staging
+        trigger: true
+      - task: task
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: "2"
+          run:
+            path: /bin/true
+
+  - name: promote-live
+    plan:
+      - get: git-repo
+        passed:
+          - test-staging
+      - get: packed-ami
+        passed:
+          - test-staging
+      - task: task
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: "2"
+          run:
+            path: /bin/true
+
+  - name: test-live
+    plan:
+      - get: git-repo
+        passed:
+          - promote-live
+        trigger: true
+      - get: packed-ami
+        passed:
+          - promote-live
+        trigger: true
+      - task: task
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: "2"
+          run:
+            path: /bin/true
