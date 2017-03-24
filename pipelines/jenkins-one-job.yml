@@ -81,7 +81,7 @@ jobs:
             args:
               - -ec
               - |
-                echo package build some.json
+                echo packer build some.json
                 echo … blah blah blah …
                 echo done!
       - put: packed-ami
