@@ -3,14 +3,14 @@ resources:
     source:
       branch: master
       private_key: {{github-private-key}}
-      uri: git@github.com:trussworks/brainsik-concourse.git
+      uri: git@github.com:trussworks/brainsik-ott-concourse-ci.git
     type: git
 
   - name: debian-package
     type: semver
     source:
       driver: s3
-      bucket: truss-github-brainsik-concourse
+      bucket: truss-github-brainsik-ott-concourse-ci
       key: debian-package
       access_key_id: {{aws-access-key-id}}
       secret_access_key: {{aws-secret-access-key}}
@@ -20,7 +20,7 @@ resources:
     type: semver
     source:
       driver: s3
-      bucket: truss-github-brainsik-concourse
+      bucket: truss-github-brainsik-ott-concourse-ci
       key: packed-ami
       access_key_id: {{aws-access-key-id}}
       secret_access_key: {{aws-secret-access-key}}
